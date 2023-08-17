@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useReducer } from 'react';
+import React, { useState, useEffect, useReducer, useContext } from 'react';
 
 import Card from '../UI/Card/Card';
 import classes from './Login.module.css';
 import Button from '../UI/Button/Button';
+import AuthContext from '../../store/auth-context';
 
 const emailReducer = (state, action) => {
   if (action.type === 'USER_INPUT') {
@@ -23,6 +24,7 @@ const passwordReducer = (state, action) => {
   }
   return { value: '', isValid: false };
 };
+
 const Login = (props) => {
   // const [enteredEmail, setEnteredEmail] = useState('');
   // const [emailIsValid, setEmailIsValid] = useState();
@@ -30,58 +32,65 @@ const Login = (props) => {
   // const [passwordIsValid, setPasswordIsValid] = useState();
   const [formIsValid, setFormIsValid] = useState(false);
 
-  const [emailState, dipatchEmail] = useReducer(emailReducer, {
+  const [emailState, dispatchEmail] = useReducer(emailReducer, {
     value: '',
-    isValid: false,
+    isValid: null,
+  });
+  const [passwordState, dispatchPassword] = useReducer(passwordReducer, {
+    value: '',
+    isValid: null,
   });
 
-  const [passwordState, dipatchPassword] = useReducer(passwordReducer, {
-    value: '',
-    isValid: false,
-  });
+  const authCtx = useContext(AuthContext);
+
+  useEffect(() => {
+    console.log('EFFECT RUNNING');
+
+    return () => {
+      console.log('EFFECT CLEANUP');
+    };
+  }, []);
 
   const { isValid: emailIsValid } = emailState;
   const { isValid: passwordIsValid } = passwordState;
 
   useEffect(() => {
     const identifier = setTimeout(() => {
-      setFormIsValid(
-        emailIsValid && passwordIsValid
-      );
+      console.log('Checking form validity!');
+      setFormIsValid(emailIsValid && passwordIsValid);
     }, 500);
 
     return () => {
+      console.log('CLEANUP');
       clearTimeout(identifier);
     };
-  }, [emailIsValid,passwordIsValid]);
-  
+  }, [emailIsValid, passwordIsValid]);
+
   const emailChangeHandler = (event) => {
-    dipatchEmail({ type: 'USER_INPUT', val: event.target.value });
-    
+    dispatchEmail({ type: 'USER_INPUT', val: event.target.value });
+
     // setFormIsValid(
     //   event.target.value.includes('@') && passwordState.isValid
-    // )
-  };
-
-  const passwordChangeHandler = (event) => {
-    dipatchPassword({ type: 'USER_INPUT', val: event.target.value })
-    
-    // setFormIsValid(
-    //   emailState.isValid && event.target.value.trim().length > 6
     // );
   };
 
+  const passwordChangeHandler = (event) => {
+    dispatchPassword({ type: 'USER_INPUT', val: event.target.value });
+
+    // setFormIsValid(emailState.isValid && event.target.value.trim().length > 6);
+  };
+
   const validateEmailHandler = () => {
-    dipatchEmail({ type: 'INPUT_BLUR' });
+    dispatchEmail({ type: 'INPUT_BLUR' });
   };
 
   const validatePasswordHandler = () => {
-    dipatchPassword({ type: 'INPUT_BLUR' });
+    dispatchPassword({ type: 'INPUT_BLUR' });
   };
 
   const submitHandler = (event) => {
     event.preventDefault();
-    props.onLogin(emailState.value, passwordState.value);
+    authCtx.onLogin(emailState.value, passwordState.value);
   };
 
   return (
